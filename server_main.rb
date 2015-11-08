@@ -21,6 +21,9 @@ def get_options
 			puts opts
 			exit
 		end
+		opts.on("-host", String, "Sets the host") do |host|
+			options[:host] = host
+		end
 	end.parse!
 	return options
 end
@@ -44,7 +47,7 @@ def start_server
 	options = get_options()
 	basePath = Dir.pwd
 	port = options[:port] || "9090"
-	server = TCPServer.new('localhost', port)
+	host = options[:host] || "localhost"
 
 	`touch log.txt` unless File.exists? 'log.txt'
 	logger = Logger.new(basePath + "/log.txt")
@@ -54,8 +57,8 @@ def start_server
 		puts "Selected in HTTP mode."
 		start_http_server(server)
 	else
-		puts "Bulletin Board mode"
-		board = BulletinBoard.new(server, logger)
+		puts "Bulletin Board mode on port " + port + " for host " + host
+		board = BulletinBoard.new(host, port, logger)
 		board.listen()
 	end
 end

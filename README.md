@@ -47,7 +47,14 @@ Features:
 ## To run the server:
 	ruby server.rb
 
+
+  Usage: ruby server.rb [options]
+      -H, --http                       Use the HTTP server example (Not intended for submission, only as example code.
+      -v, --[no-]verbose               Run verbose mode
+      -p port                          Sets the port
+      -h, --help                       Prints help
+
 ## Protocol Design:
-We'll use a JSON protocol that will be 
+The format will be a JSON protocol 
 
 

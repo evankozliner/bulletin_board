@@ -59,7 +59,6 @@ def start_server
 	else
 		puts "Bulletin Board mode on port " + port + " for host " + host
 		board = BulletinBoard.new(host, port, logger)
-		board.listen()
 	end
 end
 

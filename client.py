@@ -1,5 +1,6 @@
 import socket
-import thread
+import sys
+import threading
 
 class Client:
     def __init__(self, hostname, port):
@@ -7,12 +8,14 @@ class Client:
         client_socket = socket.socket()
         client_socket.connect((hostname, port))
         self.socket = client_socket
-        self.request = None
-        self.response = None
     
     def start(self, username):
-        thread.start_new_thread(self.listen(), ())
-        thread.start_new_thread(self.send_messages(), ())
+        listening_thread = threading.Thread(target=self.listen)
+        sending_thread = threading.Thread(target=self.send_messages)
+        listening_thread.start()
+        sending_thread.start()
+        listening_thread.join()
+        sending_thread.join()
 
     def listen(self):
         while True:
@@ -20,7 +23,7 @@ class Client:
 
     def send_messages(self):
         while True:
-            raw_command = raw_input("Enter a command:")
+            raw_command = sys.stdin.readline()
             self.socket.send(raw_command)
 
 port = 9090

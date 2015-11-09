@@ -43,15 +43,18 @@ class BulletinBoard
 	end
 
 	def post(raw_command, username)
-		messsage = split(" ")[1..h.length].join(" ") # lose the command word
+		puts "post! " + raw_command
+		# lose the command word
+		# messsage = raw_command.split(" ")[1..raw_command.length].join(" ")
 		@clients.each do |name, client|
 			unless name == username
-				client.puts message
+				client.puts raw_command
 			end
 		end
 	end
 
 	def add_client(raw_command, client)
+		puts "adding client"
 		name = raw_command.split(" ")[0].to_sym # Name should be space seperated
 		if is_duplicate_name(name, client)
 			client.puts "This username already exist. Client not added."
@@ -65,8 +68,9 @@ class BulletinBoard
 	end
 
 	def is_duplicate_name(client, name)
+		puts "is_duplicate_name"
 		@clients.each do |other_name, other_client|
-			if nick_name == other_name || client == other_client
+			if name == other_name || client == other_client
 				return true
 			end
 		end

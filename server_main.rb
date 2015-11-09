@@ -7,8 +7,10 @@ require_relative 'server'
 def get_options
 	options = {}
 	OptionParser.new do |opts|
+		http_str = "Use the HTTP server example (Not intended for " +
+								"submission, only as example code."
 		opts.banner = "Usage: ruby server.rb [options]"
-		opts.on("-H", "--http", "Use the HTTP server example (Not intended for submission, only as example code.") do |http|
+		opts.on("-H", "--http", http_str) do |http|
 			options[:http] = http
 		end
 		opts.on("-v", "--[no-]verbose", "Run verbose mode") do |v|
@@ -17,7 +19,7 @@ def get_options
 		opts.on("-p port", Integer, "Sets the port") do |port|
 			options[:port] = port.to_s
 		end
-		opts.on("-h", "--help", "Prints help") do 
+		opts.on("-h", "--help", "Prints help") do
 			puts opts
 			exit
 		end
@@ -52,7 +54,7 @@ def start_server
 	`touch log.txt` unless File.exists? 'log.txt'
 	logger = Logger.new(basePath + "/log.txt")
 	logger.info "Server started on port " + port
-	
+
 	if options[:http] == true
 		puts "Selected in HTTP mode."
 		start_http_server(server)

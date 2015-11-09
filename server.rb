@@ -1,46 +1,75 @@
 require 'socket'
+require 'json'
 
 class BulletinBoard
 	def initialize(host, port, logger)
-		@server = TCPServer.open port # Specifying host seems to deny connection on OSX 
+		@server = TCPServer.open port # Specifying  gets denied connection on OSX
 		@logger = logger
-		@connections, @rooms, @clients = {}, {}, {} 
+		@clients, @rooms = {}, {}
 		listen
 	end
 
 	def listen
 		loop {
 			session = @server.accept
-			puts "accepted a session"
 			Thread.start(session) do |client|
-				puts "started a thread for the session"
-				name = client.gets.chomp.to_sym
-				@logger.info name
-			#	@connections[:clients].each do |member_name, member_client|
-			#		# Test for dupeicate names here
-			#		puts "will test dup here..."
-			#	end
-				puts "appending a client"
-				puts @connections
-				@connections[name] = client
-				client.puts "You've joined the chat!"
-				listen_messages(name, client)
-				# get the input json
-				# figure out the response
-				# send the response to the sender and all the other clients 
+				client.puts "Please enter a username:"
+				username = add_client(client.gets, client)
+				if username
+					listen_for_commands(client, username)
+				else
+					client.puts "Invalid username, closing connection."
+					Thread.kill self
+				end
 			end
 		}.join
 	end
 
-	def listen_messages(name, client)
-		loop do 
-			message = client.gets.chomp
-			@connections.each do |connection_name, connection_cleint|
-				puts "Listing a message..."
-				unless connection_name == name
-					connection_client.puts message
-				end
+	def listen_for_commands(client, username)
+		loop {
+			raw_command = client.gets
+			first_word = raw_command.split(" ")[0]
+			act_on_command(first_word, raw_command, client, username)
+		}
+	end
+
+	def act_on_command(first_word, raw_command, client, username)
+		case first_word
+		when 'post'
+			post(raw_command, username)
+		else
+			client.puts "I don't know the command #{first_word}"
+		end
+	end
+
+	def post(raw_command, username)
+		messsage = split(" ")[1..h.length].join(" ") # lose the command word
+		@clients.each do |name, client|
+			unless name == username
+				client.puts message
 			end
 		end
+	end
+
+	def add_client(raw_command, client)
+		name = raw_command.split(" ")[0].to_sym # Name should be space seperated
+		if is_duplicate_name(name, client)
+			client.puts "This username already exist. Client not added."
+			return false
+		else
+			@clients[name] = client
+			client.puts ("You've joined the board! Please enter a command" +
+									" or type help for a list of commands.")
+			return name
+		end
+	end
+
+	def is_duplicate_name(client, name)
+		@clients.each do |other_name, other_client|
+			if nick_name == other_name || client == other_client
+				return true
+			end
+		end
+		return false
 	end
 end

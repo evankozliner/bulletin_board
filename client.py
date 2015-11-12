@@ -22,12 +22,10 @@ class Client:
     def prep_data(self, data):
         words = data.split(" ")
         command = words[0]
-        remaining word = " ".join(h.split(" ")[1:len(h)])
+        remaining_words = " ".join(words[1:len(words)])
         return json.dumps({"command": command, "data": data})
 
     def start(self):
-        sys.stdout.write('[Me] ')
-        sys.stdout.flush()
         while True:
             socket_list = [sys.stdin, self.socket]
             ready_to_read,ready_to_write,in_error = select.select(socket_list , [], [])
@@ -39,12 +37,13 @@ class Client:
                         sys.exit()
                     else :
                         sys.stdout.write(data)
-                        sys.stdout.write('[Me] ')
-                        sys.stdout.flush()
+                        # sys.stdout.write('[Me] ')
+                        # sys.stdout.flush()
                 else : # User sending message to server
+                    # sys.stdout.write('[Me] ')
+                    # sys.stdout.flush()
                     msg = sys.stdin.readline()
                     self.socket.send(msg)
-                    sys.stdout.write('[Me] '); sys.stdout.flush()
 
 # Program starts here
 if(len(sys.argv) < 3) :

@@ -48,7 +48,7 @@ class Client:
             return None
         json_message=json.dumps(msg_info)
         print "sending message: "+json_message
-        self.socket.send(json_message)
+        self.socket.send(json_message+"\n")
         return None
         
     def start(self):
@@ -70,7 +70,8 @@ class Client:
                     else:
                         if self.name==None: #if no name set yet
                             self.name=msg[0]
-                            self.socket.send(self.name)
+                            print "sending {0}".format(self.name)
+                            self.socket.send(self.name+"\n")
                             print "Username set. Hello {0}!".format(self.name)
                             print "\nEnter a command, or 'h' for a list of commands."
                         else: #otherwise handle command

@@ -44,6 +44,12 @@ Features:
 * GUI (NOT STARTED)
 	* Client
 
+# How we'll split up the work
+* Change the client to prompt the user for if they want to connect
+* Get a list of groups from the server (hardcoded)
+* select a group command
+* 
+
 ## To run the server:
 	ruby server.rb
 <pre>

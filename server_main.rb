@@ -54,7 +54,6 @@ def start_server
 	`touch log.txt` unless File.exists? 'log.txt'
 	logger = Logger.new(basePath + "/log.txt")
 	logger.info "Server started on port " + port
-
 	if options[:http] == true
 		puts "Selected in HTTP mode."
 		start_http_server(server)

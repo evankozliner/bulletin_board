@@ -17,16 +17,12 @@ class Client:
         except:
             print 'Unable to connect to {0} on port {1}'.format(host,port)
             sys.exit()
-
-    # TODO We'll need to fill this guy out if we want to use json
-    def prep_data(self, data):
-        words = data.split(" ")
-        command = words[0]
-        remaining_words = " ".join(words[1:len(words)])
-        return json.dumps({"command": command, "data": data})
     def handle_command(self,msg):
         msg_info={"command":msg[0].lower()}
-        if msg[0].lower()=="grouppost":
+        if msg[0].lower()=="h" or msg[0].lower()=="help":
+            print "Possible commands are: 'grouppost', 'groupjoin', 'groups', 'groupusers', 'groupleave', or 'groupmessage'."
+            return None
+        elif msg[0].lower()=="grouppost":
             #get all info about message from user and add to array
             msg_info['groupId']=raw_input("Enter index of group you want to send message to:") or "1"
             msg_info['subject']=raw_input("Enter message subject: ") or "subject1"
@@ -74,7 +70,9 @@ class Client:
                     else:
                         if self.name==None: #if no name set yet
                             self.name=msg[0]
-                            self.socket.send(self.name) 
+                            self.socket.send(self.name)
+                            print "Username set. Hello {0}!".format(self.name)
+                            print "\nEnter a command, or 'h' for a list of commands."
                         else: #otherwise handle command
                             self.handle_command(msg)
 

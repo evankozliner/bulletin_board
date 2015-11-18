@@ -45,12 +45,14 @@ class Client:
                     msg = sys.stdin.readline()
                     self.socket.send(msg)
 
-# Program starts here
-if(len(sys.argv) < 3) :
-    print 'Usage : python client.py host port'
+#program starts here
+print "Welcome client, to this server thing"
+input_list=raw_input("Enter command 'connect [hostname] [port]' to connect to a server: ").split()
+if input_list[0]!="connect" or len(input_list)!=3:
+    print "Input should be 'connect [hostname] [port]'"
     sys.exit()
-else:
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-    client = Client(host, port)
-    client.start()
+
+host = input_list[1]
+port = int(input_list[2])
+client = Client(host, port)
+client.start()

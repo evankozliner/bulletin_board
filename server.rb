@@ -9,6 +9,7 @@ class BulletinBoard
 		listen
 	end
 
+
 	def listen
 		loop {
 			session = @server.accept
@@ -41,7 +42,6 @@ class BulletinBoard
 			client.puts "[Server] I don't know the command #{first_word}"
 		end
 	end
-
 	def post(raw_command, username)
 		begin
 			puts raw_command
@@ -57,6 +57,7 @@ class BulletinBoard
 		end
 	end
 
+
 	def add_client(raw_command, client)
 		name = raw_command.split(" ")[0].to_sym # Name should be space seperated
 		if is_duplicate_name(name, client)
@@ -69,7 +70,6 @@ class BulletinBoard
 			return name
 		end
 	end
-
 	def is_duplicate_name(client, name)
 		@clients.each do |other_name, other_client|
 			if name == other_name || client == other_client

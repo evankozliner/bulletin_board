@@ -1,5 +1,6 @@
 require 'socket'
 require 'json'
+require 'logger'
 
 class Group
 	def initialize(id, name)
@@ -24,7 +25,19 @@ class Client
 	attr_accessor :name, :session
 	
 	# Sends a JSON response to the client containing a list of strings 
-	def send message
+	# Appends the sender in brackets to each line
+	def send sender, lines
+		puts sender
+		puts lines.to_s
+		senderified_lines = []
+		lines.each do |line|
+			senderified_lines << "[" + sender + "]" + line
+		end
+		json_message = {
+			:messageContents => senderified_lines
+		}.to_json
+		puts json_message.to_s
+		@session.puts json_message
 	end
 end
 
@@ -37,7 +50,7 @@ class Server
 	def initialize(host, port, logger)
 		@server = TCPServer.open port
 		@logger = logger
-		@clients = {}
+		@clients = []
 		listen
 	end
 	
@@ -49,8 +62,8 @@ class Server
 			accept_session = @server.accept
 			Thread.start(accept_session) do |session|
 				session.puts("Please enter a username:")
-				client = add_client(client.gets, session)
-				if username
+				client = add_client(session.gets, session)
+				if client
 					listen_for_commands(client)
 				else
 					session.puts("[Server] Invalid username, closing connection.")
@@ -60,16 +73,20 @@ class Server
 		}.join
 	end
 
-
+	# Waits for JSON messages from the client on a seperate thread
+	# then 
 	def listen_for_commands(client)
 		loop {
-			client_dump = JSON.parse(client.session.gets)
+			msg = client.session.gets
+			client_dump = JSON.parse(msg)
+			puts client_dump.to_s
 			first_word = client_dump["command"]
 			act_on_command(first_word, raw_command, client)
 		}
 	end
 
 	def act_on_command(first_word, raw_command, client)
+		puts first_word
 		case first_word
 		when 'join'
 		when ''
@@ -77,10 +94,12 @@ class Server
 			client.send("Server", ["I don't know the command #{first_word}"])
 		end
 	end
-
+	
+	# Adds an object of type client to the clients attribute if that client
+	# passses is_duplicate_name. Sends a response indicating success.
 	def add_client(raw_command, session)
 		name = raw_command.split(" ")[0].to_sym # Name should be space seperated
-		if is_duplicate_name(name, client)
+		if is_duplicate_name(name, session)
 			session.puts("[Server] This username already exist. Client not added.")
 			return false
 		else
@@ -88,15 +107,16 @@ class Server
 			new_client.session = session
 			new_client.name = name
 			@clients << new_client
-			new_client.send("Server", "You've joined the board! Please enter a command" +
-									" or type help for a list of commands.")
-			return name
+			new_client.send("Server", ["You've joined the board! Please enter a command" +
+									" or type help for a list of commands."])
+			return new_client
 		end
 	end
-
-	def is_duplicate_name(client_session, name)
+	
+	# Returns true for a duplicate session or client name, false otherwise
+	def is_duplicate_name(name, client_session)
 		@clients.each do |other_client|
-			if name == other_client.name || client == client.session
+			if name == other_client.name || client_session == other_client.session
 				return true
 			end
 		end
@@ -106,6 +126,6 @@ end
 
 port = "9090"
 host = "localhost"
-logger = Logger.new(basePath + "/log.txt") 
+logger = Logger.new(Dir.pwd+ "/log.txt") 
 logger.info "Server started on port " + port 
 server = Server.new(host, port, logger)

@@ -3,8 +3,9 @@ require 'json'
 require 'logger'
 
 class Group
-	def initialize(id, name)
-		@id = id
+	attr_reader :name
+	attr_accessor :messages, :clients
+	def initialize(name)
 		@name = name
 		@messages = []
 		@clients = []
@@ -27,16 +28,13 @@ class Client
 	# Sends a JSON response to the client containing a list of strings 
 	# Appends the sender in brackets to each line
 	def send sender, lines
-		puts sender
-		puts lines.to_s
 		senderified_lines = []
 		lines.each do |line|
-			senderified_lines << "[" + sender + "]" + line
+			senderified_lines << "[" + sender + "] " + line
 		end
 		json_message = {
 			:messageContents => senderified_lines
 		}.to_json
-		puts json_message.to_s
 		@session.puts json_message
 	end
 end
@@ -51,7 +49,18 @@ class Server
 		@server = TCPServer.open port
 		@logger = logger
 		@clients = []
+		@groups = []
+		create_groups
 		listen
+	end
+	
+	# Returns a list of 5 hard-coded groups
+	def create_groups
+		group_names = ["cats", "dogs", "humans", "horses", "cows"]
+		while group_names.length > 0 do
+			group = Group.new(group_names.pop)
+			@groups << group
+		end
 	end
 	
 	# Waits for requests from clients and opens a thread for each client.
@@ -76,20 +85,40 @@ class Server
 	# Waits for JSON messages from the client on a seperate thread
 	# then 
 	def listen_for_commands(client)
+		puts "listening to " + client.name.to_s
 		loop {
 			msg = client.session.gets
 			client_dump = JSON.parse(msg)
 			puts client_dump.to_s
 			first_word = client_dump["command"]
-			act_on_command(first_word, raw_command, client)
+			act_on_command(first_word, client_dump, client)
 		}
 	end
-
-	def act_on_command(first_word, raw_command, client)
-		puts first_word
+	
+	# Sends the client a list of group names back
+	def handle_groups(client)
+		puts "handle groups"
+		group_names = []
+		@groups.each do |group|
+			group_names << group.name
+		end
+		puts group_names.to_s
+		client.send("Server", group_names)
+	end
+	
+	# Takes a specific word as a command and calls a response function based on
+	# that command
+	def act_on_command(first_word, client_hash, client)
+		puts "handling " + first_word
 		case first_word
 		when 'join'
-		when ''
+		when 'groups'
+			handle_groups(client)
+		when 'grouppost'
+		when 'groupjoin'
+		when 'groupusers'
+		when 'groupleave'
+		when 'groupmessage'
 		else
 			client.send("Server", ["I don't know the command #{first_word}"])
 		end

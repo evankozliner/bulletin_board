@@ -25,7 +25,6 @@ class Group
 		@clients.each do |client|
 			names << client.name.to_s
 		end
-		puts names.to_s
 		return names
 	end
 end
@@ -135,6 +134,18 @@ class Server
 		client.send("Server", resp)
 	end
 
+	# Removes a client from a group
+	def handle_leave(client, group_name)
+		group = get_group_by_name(group_name)
+		resp = ["Group " + group_name + 
+			" doesn't exist or you do not belong to that group."]
+		if group and group.get_usernames.include? client.name.to_s
+			group.clients.delete(client)
+			resp = ["Left group " + group_name]
+		end
+		client.send("Server", resp)
+	end
+
 	# Fetches a group by its (unique) name, returns false if the group
 	# doesn't exist
 	def get_group_by_name(name)
@@ -159,6 +170,7 @@ class Server
 		when 'groupusers'
 			handle_users(client, client_hash["groupId"])
 		when 'groupleave'
+			handle_leave(client, client_hash["groupId"])
 		when 'groupmessage'
 		else
 			client.send("Server", ["I don't know the command #{first_word}"])

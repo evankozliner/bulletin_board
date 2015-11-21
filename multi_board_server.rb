@@ -19,7 +19,15 @@ class Group
 	def send_message(message)
 	end
 
-	# 
+	# Returns a list of usernames of clients in the group
+	def get_usernames
+		names = []
+		@clients.each do |client|
+			names << client.name.to_s
+		end
+		puts names.to_s
+		return names
+	end
 end
 
 class Client
@@ -97,13 +105,45 @@ class Server
 	
 	# Sends the client a list of group names back
 	def handle_groups(client)
-		puts "handle groups"
 		group_names = []
 		@groups.each do |group|
 			group_names << group.name
 		end
-		puts group_names.to_s
 		client.send("Server", group_names)
+	end
+
+	# Adds a client to a group, informs client if the group doesn't exist
+	def handle_join(client, group_name)
+		resp = "Group " + group_name + " doesn't exist"
+		group = get_group_by_name(group_name)
+		if group
+			group.clients << client
+			resp = "Joined group " + group_name
+		end
+		client.send("Server", [resp])
+	end
+
+	# Returns the users belonging to a group or informs the client 
+	# that the group doesn't exist
+	def handle_users(client, group_name)
+		group = get_group_by_name(group_name)
+		resp = ["Group " + group_name + " doesn't exist"]
+		if group
+			puts "Getting usernames... for group " + group.name
+			resp = group.get_usernames
+		end
+		client.send("Server", resp)
+	end
+
+	# Fetches a group by its (unique) name, returns false if the group
+	# doesn't exist
+	def get_group_by_name(name)
+		@groups.each do |group|
+			if group.name == name
+				return group
+			end
+		end
+		return false
 	end
 	
 	# Takes a specific word as a command and calls a response function based on
@@ -111,12 +151,13 @@ class Server
 	def act_on_command(first_word, client_hash, client)
 		puts "handling " + first_word
 		case first_word
-		when 'join'
+		when 'groupjoin'
+			handle_join(client, client_hash["groupId"])
 		when 'groups'
 			handle_groups(client)
 		when 'grouppost'
-		when 'groupjoin'
 		when 'groupusers'
+			handle_users(client, client_hash["groupId"])
 		when 'groupleave'
 		when 'groupmessage'
 		else

@@ -5,26 +5,75 @@ import select
 import pygtk
 import gtk
 
-class Base:
+print "running client with gui..."
+
+class connect_gui:
+    def connect_handler(self,widget,entry):
+        input_list=entry[0].get_text().split()
+        input_list.insert(0,"connect")
+        if input_list[0].lower()!="connect" or len(input_list)!=3:
+            print "Error: Input should be 'connect [hostname] [port]'"
+            print "Exiting..."
+            sys.exit()
+        host = input_list[1]
+        port = int(input_list[2])
+        client = Client(host, port)
+        client.start()
+        entry[1].hide()
+    def empty_callback(self,widget,entry):
+        pass
     def __init__(self):
-        self.window=gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.window.show()
+        window=gtk.Window(gtk.WINDOW_TOPLEVEL) #create new window
+        window.set_size_request(500,300)
+        window.set_title("Connect to a server")
+        window.connect("delete_event",lambda w,e:gtk.main_quit())
+        vbox=gtk.VBox(False,0)
+        window.add(vbox)
+        vbox.show()
+
+        label=gtk.Label()
+        label.set_text("enter 'localhost portnum' and press connect")
+        vbox.pack_start(label,True,True,0)
+        label.show()
+
+        entry=gtk.Entry()
+        entry.set_max_length(50)
+        entry.connect("activate",self.empty_callback,[entry,window])
+        entry.set_text("localhost 9090")
+        vbox.add(entry)
+        entry.show()
+
+        hbox=gtk.HBox(False,0)
+        vbox.add(hbox)
+        hbox.show()
+
+        button=gtk.Button(stock=gtk.STOCK_CLOSE)
+        button.connect("clicked",lambda w:gtk.main_quit())
+
+        button1=gtk.Button("Connect")
+        button1.connect("clicked",self.connect_handler,entry)
+
+        vbox.pack_start(button1,True,True,0)
+        button1.set_flags(gtk.CAN_DEFAULT)
+        button1.grab_default()
+        button1.show()
+        vbox.pack_start(button,True,True,0)
+        button.set_flags(gtk.CAN_DEFAULT)
+        button.grab_default()
+        button.show()
+        window.show()
+
     def main(self):
         gtk.main()
-print "running client with gui..."
-if __name__=="__main__":
-    base=Base()
-    base.main()
-
 
 class Client:
     def __init__(self, hostname, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(2)
-        self.connect(socket)
+        self.connect(socket,hostname,port)
         self.name=None
 
-    def connect(self, socket):
+    def connect(self, socket,host,port):
         try:
             self.socket.connect((host, port))
             print "\nSuccessfully connected to {0} on port {1}. ".format(host, port)
@@ -92,14 +141,7 @@ class Client:
                         else: #otherwise handle command
                             self.handle_command(msg)
 
-#program starts here
-print "\nWelcome client, to this server thing!\n"
-input_list=(raw_input("Enter command 'connect [hostname] [port]' to connect to a server: ") or 'connect localhost 9090').split()
-if input_list[0].lower()!="connect" or len(input_list)!=3:
-    print "Error: Input should be 'connect [hostname] [port]'"
-    print "Exiting..."
-    sys.exit()
-host = input_list[1]
-port = int(input_list[2])
-client = Client(host, port)
-client.start()
+
+if __name__=="__main__":
+    base=connect_gui()
+    base.main()

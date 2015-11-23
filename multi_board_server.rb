@@ -7,8 +7,7 @@ class Group
 	attr_accessor :messages, :clients
 	def initialize(name)
 		@name = name
-		@messages = []
-		@clients = []
+		@messages, @clients = [], []
 	end
 
 	# Gets a message by id from the group
@@ -25,24 +24,15 @@ class Group
 	# Sends a message to all the clients in the group in
 	# the format: "Message ID, Sender, Post Date, Subject"
 	def propogate_message(message)
-		puts "Propogating message"
 		message_string = message.id.to_s + ", " +
 			message.client.name.to_s + ", " +
 			message.date.to_s + ", " +
 			message.subject.to_s
-		puts "Sending out " + message_string + "..."
 		@clients.each do |client|
-			puts "puts client name: " + client.name.to_s
-			puts "message client: " + message.client.name.to_s
 			unless client.name.to_s == message.client.name.to_s
-				begin
-					client.send(message.client.name.to_s, [message_string])
-				rescue => e
-					puts e
-				end
+				client.send(message.client.name.to_s, [message_string])
 			end
 		end
-		puts "propogated message"
 	end
 
 	# Returns a list of usernames of clients in the group
@@ -60,14 +50,12 @@ class Group
 		@messages.each do |message|
 			ids << message.id
 		end
-		puts ids.to_s
 		return ids
 	end
 
 	# Adds a message to the group by providing the message an id,
 	# adding it to the messages attribute and sending it to the clients
 	def post(client, contents, subject)
-		puts "generating message"
 		id = if get_message_ids().empty? then 0 else get_message_ids().max + 1 end
 		new_message = Message.new(id,
 															subject,
@@ -107,7 +95,6 @@ class Client
 	end
 end
 
-# Singleton for the bulletin board server
 class Server
 	def initialize(host, port, logger)
 		@server = TCPServer.open port
@@ -148,13 +135,15 @@ class Server
 	# Waits for JSON messages from the client on a seperate thread
 	# then
 	def listen_for_commands(client)
-		puts "listening to " + client.name.to_s
 		loop {
 			msg = client.session.gets
 			client_dump = JSON.parse(msg)
-			puts client_dump.to_s
 			first_word = client_dump["command"]
-			act_on_command(first_word, client_dump, client)
+			begin
+				act_on_command(first_word, client_dump, client)
+			rescue => exception # Eat exceptions so server doesn't crash
+				puts exception
+			end
 		}
 	end
 
@@ -174,6 +163,8 @@ class Server
 		if group
 			group.clients << client
 			resp = "Joined group " + group_name
+			notification_string = client.name.to_s + " joined " + group_name
+			group.post(client, notification_string, notification_string)
 		end
 		client.send("Server", [resp])
 	end
@@ -184,7 +175,6 @@ class Server
 		group = get_group_by_name(group_name)
 		resp = ["Group " + group_name + " doesn't exist"]
 		if group
-			puts "Getting usernames... for group " + group.name
 			resp = group.get_usernames
 		end
 		client.send("Server", resp)
@@ -208,7 +198,6 @@ class Server
 		resp = ["Group " + group_name +
 					 	" doesn't exist or you do not belong to that group."]
 		if group and group.get_usernames.include? client.name.to_s
-			puts "posting to " + group_name
 			group.post(client, message, subject)
 		else
 			client.send("Server", resp)
@@ -243,7 +232,6 @@ class Server
 	# Takes a specific word as a command and calls a response function based on
 	# that command. Retreives values from json hash for the handling functions.
 	def act_on_command(first_word, client_hash, client)
-		puts "handling " + first_word
 		case first_word
 		when 'groupjoin'
 			handle_join(client, client_hash["groupId"])

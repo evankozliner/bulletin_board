@@ -123,6 +123,7 @@ class Server
 				session.puts("Please enter a username:")
 				client = add_client(session.gets, session)
 				if client
+					handle_groups(client) # Notifies client of available groups
 					listen_for_commands(client)
 				else
 					session.puts("[Server] Invalid username, closing connection.")
@@ -161,6 +162,7 @@ class Server
 		resp = "Group " + group_name + " doesn't exist"
 		group = get_group_by_name(group_name)
 		if group
+			handle_users(client, group_name)
 			group.clients << client
 			resp = "Joined group " + group_name
 			notification_string = client.name.to_s + " joined " + group_name
@@ -188,6 +190,8 @@ class Server
 		if group and group.get_usernames.include? client.name.to_s
 			group.clients.delete(client)
 			resp = ["Left group " + group_name]
+			notification_string = client.name.to_s + " left " + group_name
+			group.post(client, notification_string, notification_string)
 		end
 		client.send("Server", resp)
 	end

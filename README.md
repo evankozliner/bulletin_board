@@ -1,5 +1,6 @@
 # Bulletin Board
 A simple, command line bulletin board.
+Written by Evan Kozliner and Sina Sabet
 
 ## To Run:
 Download multi_board_server.rb and client.py files. Run the multi_board_server.rb from the command line ("ruby multi_board_server.rb"), and then run as many instances of the client as you'd like ("python client.py") to get it up and running. Check the pdf with instructions for the project for notes on the commands and what they do.
@@ -28,7 +29,3 @@ Messages are passed back and forth in JSON format. The server maintains a thread
 	messageContent: "String"
 }
 </pre>
-
-## Assumptions
-* The worksheet did not state if server messages counted towards the clients last messages seen. This implementation assumes that they do.
-* The worksheet did not state if the last 2 messages a client could see were to be shown upon his/her joining the group. This implementation does not show them.

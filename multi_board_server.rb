@@ -66,12 +66,13 @@ class Group
 	end
 
 	#gets two most recent messages as strings as items in an array
+	#skips first most recent message, since it's going to be the join notification
 	def get_recent_messages
 		len=@messages.length
-		if len>1
-			return [@messages[-2].to_string,@messages[-1].to_string]
-		elsif len>0
-			return [@messages[len-1].to_string]
+		if len>2
+			return [@messages[-3].to_string,@messages[-2].to_string]
+		elsif len>1
+			return [@messages[-2].to_string]
 		else
 			return []
 		end

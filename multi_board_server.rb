@@ -74,7 +74,7 @@ class Group
 		elsif len>1
 			return [@messages[-2].to_string]
 		else
-			return []
+			return ["No previous messages in this group from before you joined."]
 		end
 	end
 end
@@ -227,6 +227,14 @@ class Server
 		end
 	end
 
+	def get_group_names()
+		ret=[]
+		@groups.each do |group|
+			ret.push(group.name)
+		end
+		return ret
+	end
+
 	# Retrieves a message by its group and message ids, displaying its contents
 	def handle_open(client, group_name, message_id)
 		group = get_group_by_name(group_name)
@@ -289,7 +297,7 @@ class Server
 			new_client.name = name
 			@clients << new_client
 			new_client.send("Server", ["You've joined the board! Please enter a command" +
-									" or type help for a list of commands."])
+									" or type help for a list of commands.","Below is a list of all of the groups."]+get_group_names)
 			return new_client
 		end
 	end

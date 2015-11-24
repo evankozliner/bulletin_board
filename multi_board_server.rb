@@ -7,17 +7,27 @@ class Group
 	attr_accessor :messages, :clients
 	def initialize(name)
 		@name = name
-		@messages, @clients = [], []
+		@messages = []
+		@clients = {}
+	end
+
+	# Adds a (client, id) pair, where id indicates the message id when the client
+	# joined the chat (to prevent him/her from seeing messages past that)
+	def add_client(client)
+		id = if get_message_ids().length < 2 then 0 else get_message_ids().max end
+		@clients[client] = id
 	end
 
 	# Gets a message by id from the group
 	def get_message(message_id)
 		fetched_message = nil
 		@messages.each do |message|
-			if message.id = message_id.to_i
+			if message.id.to_i == message_id.to_i
 				fetched_message = message
 			end
 		end
+		puts fetched_message
+		puts fetched_message.contents
 		return fetched_message.contents
 	end
 
@@ -28,7 +38,7 @@ class Group
 			message.client.name.to_s + ", " +
 			message.date.to_s + ", " +
 			message.subject.to_s
-		@clients.each do |client|
+		@clients.keys.each do |client|
 			unless client.name.to_s == message.client.name.to_s
 				client.send(message.client.name.to_s, [message_string])
 			end
@@ -38,7 +48,7 @@ class Group
 	# Returns a list of usernames of clients in the group
 	def get_usernames
 		names = []
-		@clients.each do |client|
+		@clients.keys.each do |client|
 			names << client.name.to_s
 		end
 		return names
@@ -56,7 +66,7 @@ class Group
 	# Adds a message to the group by providing the message an id,
 	# adding it to the messages attribute and sending it to the clients
 	def post(client, contents, subject)
-		id = if get_message_ids().empty? then 0 else get_message_ids().max + 1 end
+		id = @messages.length
 		new_message = Message.new(id,
 															subject,
 															contents,
@@ -83,7 +93,7 @@ class Client
 
 	# Sends a JSON response to the client containing a list of strings
 	# Appends the sender in brackets to each line
-	def send sender, lines
+	def send(sender, lines)
 		senderified_lines = []
 		lines.each do |line|
 			senderified_lines << "[" + sender + "] " + line
@@ -163,7 +173,7 @@ class Server
 		group = get_group_by_name(group_name)
 		if group
 			handle_users(client, group_name)
-			group.clients << client
+			group.add_client(client)
 			resp = "Joined group " + group_name
 			notification_string = client.name.to_s + " joined " + group_name
 			group.post(client, notification_string, notification_string)
@@ -208,16 +218,28 @@ class Server
 		end
 	end
 
-	# Retrieves a message by its group and message ids, displaying its contents
+	# Retrieves a message by its group and message ids, displaying its contents.
+	# Does not allow users to see images for groups they do not belong to,
+	# or that two before the post they joined at
 	def handle_open(client, group_name, message_id)
 		group = get_group_by_name(group_name)
 		resp = ["Either group " + group_name +
 			" does not exist, or the message with id " + message_id +
-			" isn't within that group, or you do not belong to that group."]
+			" isn't within that group, or you do not belong to that group, or" +
+			"the post is prior to your allowed history."]
+		puts "Client id:"
+		puts group.clients[client].to_s
+		puts "message id:"
+		puts message_id.to_s
+		puts (group.clients[client] < (message_id.to_i + 2)).to_s
+		puts group
+		puts (group.get_usernames.include? client.name.to_s).to_s
+		puts (group.get_message_ids.include? message_id.to_i).to_s
 		if group and
 			group.get_usernames.include? client.name.to_s and
-			group.get_message_ids.include? message_id.to_i
-			resp = [group.get_message(message_id)]
+			group.get_message_ids.include? message_id.to_i and
+			group.clients[client] < (message_id.to_i + 1)
+			resp = [group.get_message(message_id)] # list-ify for response
 		end
 		client.send("Server", resp)
 	end
@@ -269,8 +291,9 @@ class Server
 			new_client.session = session
 			new_client.name = name
 			@clients << new_client
-			new_client.send("Server", ["You've joined the board! Please enter a command" +
-									" or type help for a list of commands."])
+			new_client.send("Server", ["You've joined the board! A list of " +
+				"groups will display soon. Please enter a command or type help " +
+				"for a list of commands."])
 			return new_client
 		end
 	end

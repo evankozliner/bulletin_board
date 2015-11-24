@@ -62,10 +62,13 @@ class Client:
                     if not data : #if empty message, you're not connected
                         print '\nYou are disconnected.'
                         sys.exit()
-                    else : #otherwise decode the json message and print each line
-                        messages=json.load(data)
-                        for message in messages['messageContents']:
-                            sys.stdout.write(message)
+                    else :
+                        if is_json(data): #if message is json, parse and print appropriate parts
+                            messages=json.loads(data)
+                            for message in messages['messageContents']:
+                                sys.stdout.write(message+"\n")
+                        else: #otherwise just print the whole response
+                            sys.stdout.write(data)
                 else : # User sending message to server
                     msg=sys.stdin.readline().split()
                     if len(msg)==0: #error if user doesn't input anything
@@ -73,12 +76,19 @@ class Client:
                     else:
                         if self.name==None: #if no name set yet
                             self.name=msg[0]
-                            print "sending {0}".format(self.name)
+                            #print "sending {0}".format(self.name)
                             self.socket.send(self.name+"\n")
-                            print "Username set. Hello {0}!".format(self.name)
-                            print "\nEnter a command, or 'h' for a list of commands."
                         else: #otherwise handle command
                             self.handle_command(msg)
+def is_json(json_str):
+    """
+    try to decode the string as if it were json. if an error is raised, it's not json.
+    """
+    try:
+        json.loads(json_str)
+    except ValueError, e:
+        return False
+    return True
 
 #program starts here
 print "\nWelcome client, to this server thing!\n"

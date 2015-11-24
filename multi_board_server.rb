@@ -23,13 +23,13 @@ class Group
 
 	# Sends a message to all the clients in the group in
 	# the format: "Message ID, Sender, Post Date, Subject"
-	def propogate_message(message)
+	def propogate_message(message, not_message=true)
 		message_string = message.id.to_s + ", " +
 			message.client.name.to_s + ", " +
 			message.date.to_s + ", " +
-			message.subject.to_s
+			message.subject.to_s + ", "+ message.contents.to_s
 		@clients.each do |client|
-			unless client.name.to_s == message.client.name.to_s
+			unless (client.name.to_s == message.client.name.to_s && not_message)
 				client.send(message.client.name.to_s, [message_string])
 			end
 		end
@@ -55,14 +55,26 @@ class Group
 
 	# Adds a message to the group by providing the message an id,
 	# adding it to the messages attribute and sending it to the clients
-	def post(client, contents, subject)
+	def post(client, contents, subject, not_message=true)
 		id = if get_message_ids().empty? then 0 else get_message_ids().max + 1 end
 		new_message = Message.new(id,
 															subject,
 															contents,
 															client)
 		@messages << new_message
-		propogate_message(new_message)
+		propogate_message(new_message,not_message)
+	end
+
+	#gets two most recent messages as strings as items in an array
+	def get_recent_messages
+		len=@messages.length
+		if len>1
+			return [@messages[-2].to_string,@messages[-1].to_string]
+		elsif len>0
+			return [@messages[len-1].to_string]
+		else
+			return []
+		end
 	end
 end
 
@@ -75,6 +87,12 @@ class Message
 		@contents = contents
 		@date = Time.now
 		@client = client
+	end
+	def to_string
+		return @id.to_s + ", " +
+			@client.name.to_s + ", " +
+			@date.to_s + ", " +
+			@subject.to_s + ", "+ @contents.to_s
 	end
 end
 
@@ -164,9 +182,13 @@ class Server
 			group.clients << client
 			resp = "Joined group " + group_name
 			notification_string = client.name.to_s + " joined " + group_name
-			group.post(client, notification_string, notification_string)
+			group.post(client, notification_string, "Join")
 		end
-		client.send("Server", [resp])
+		resp=[resp,"Current members of this group: "+group.get_usernames.join(", ")]
+
+		client.send("Server",resp+group.get_recent_messages)
+		#client.send("Server", [resp])
+		#client.send("Server", group.get_usernames)
 	end
 
 	# Returns the users belonging to a group or informs the client
@@ -193,12 +215,12 @@ class Server
 	end
 
 	# Adds a message to a particular group
-	def handle_post(client, message, subject, group_name)
+	def handle_post(client, message, subject, group_name, not_message=false)
 		group = get_group_by_name(group_name)
 		resp = ["Group " + group_name +
 					 	" doesn't exist or you do not belong to that group."]
 		if group and group.get_usernames.include? client.name.to_s
-			group.post(client, message, subject)
+			group.post(client, message, subject, not_message)
 		else
 			client.send("Server", resp)
 		end

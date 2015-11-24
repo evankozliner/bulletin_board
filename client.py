@@ -24,24 +24,24 @@ class Client:
             return None
         elif msg[0].lower()=="grouppost":
             #get all info about message from user and add to array
-            msg_info['groupId']=raw_input("Enter index of group you want to send message to:") or "1"
+            msg_info['groupId']=raw_input("Enter name of group you want to send message to:") or "1"
             msg_info['subject']=raw_input("Enter message subject: ") or "subject1"
             msg_info['message']=raw_input("Enter message body: ") or "body1"
         elif msg[0].lower()=="groupjoin":
             #get a groupid if user didn't specify one as param of command, then add to msg_info
-            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter groupId: ") or "1")
+            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter group name: ") or "1")
         elif msg[0].lower()=="groups":
             #do nothing, just send message
             pass
         elif msg[0].lower()=="groupusers":
             #get a groupid if user didn't specify one as param of command, then add to msg_info
-            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter groupId: ") or "1")
+            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter group name: ") or "1")
         elif msg[0].lower()=="groupleave":
             #get a groupid if user didn't specify one as param of command, then add to msg_info
-            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter groupId: ") or "1")
+            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter group name: ") or "1")
         elif msg[0].lower()=="groupmessage":
             #get a groupid and messageid if user didn't specify as param of command, then add to msg_info
-            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter groupId: ") or "1")
+            msg_info['groupId']=msg[1] if len(msg)>1 else (raw_input("Enter group name: ") or "1")
             msg_info['messageId']=msg[1] if len(msg)>1 else (raw_input("Enter messageId: ") or "1")
         else:
             print "Invalid command entered!"

@@ -46,8 +46,9 @@ class Client:
         else:
             print "Invalid command entered!"
             return None
+        #json encode and send the message to server
         json_message=json.dumps(msg_info)
-        print "sending message: "+json_message
+        #print "sending message: "+json_message
         self.socket.send(json_message+"\n")
         return None
         
@@ -58,11 +59,13 @@ class Client:
             for sock in ready_to_read:
                 if sock == self.socket: # Message from server
                     data = sock.recv(4096)
-                    if not data :
+                    if not data : #if empty message, you're not connected
                         print '\nYou are disconnected.'
                         sys.exit()
-                    else :
-                        sys.stdout.write(data)
+                    else : #otherwise decode the json message and print each line
+                        messages=json.load(data)
+                        for message in messages['messageContents']:
+                            sys.stdout.write(message)
                 else : # User sending message to server
                     msg=sys.stdin.readline().split()
                     if len(msg)==0: #error if user doesn't input anything

@@ -211,6 +211,8 @@ class Server
 		if group and group.get_usernames.include? client.name.to_s
 			group.clients.delete(client)
 			resp = ["Left group " + group_name]
+			notification_string = client.name.to_s + " left " + group_name
+			group.post(client,notification_string,"Leave")
 		end
 		client.send("Server", resp)
 	end
